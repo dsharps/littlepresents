@@ -35,7 +35,8 @@ nextUpdateInterval      = 0.0 # Time of next recurring update operation
 dailyFlag               = False # Set after daily trigger occurs
 lastId                  = '1'   # State information passed to/from interval script
 printer                 = Adafruit_Thermal("/dev/ttyAMA0", 19200, timeout=5)
-lp_list                 = []
+lp_list_for_maggie      = []
+lp_list_for_dave        = []
 
 # Called when button is briefly tapped.  Invokes time/temperature script.
 def tap():
@@ -90,7 +91,7 @@ GPIO.output(ledPin, GPIO.HIGH)
 
 # Processor load is heavy at startup; wait a moment to avoid
 # stalling during greeting.
-time.sleep(30)
+time.sleep(3)
 
 # Show IP address (if network is available)
 try:
@@ -147,8 +148,8 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
-def checkForDeliveries():
-    print('Checking deliveries')
+def checkForDeliveries(lp_list, addressee):
+    #print('Checking deliveries')
     # Get date in format found in google sheet
     now = datetime.datetime.now()
 
@@ -158,7 +159,10 @@ def checkForDeliveries():
     current_hour = `current_hour-12` if current_hour > 12 else `current_hour`
     current_minute = now.strftime("%M")
     current_time_string = "%s:%s %s" % (current_hour, current_minute, am_pm)
-
+    print('Checking deliveries, it\'s %s, %s' % (current_day_string, current_time_string))
+    print('LP found: %s' % (len(lp_list)))
+    # Get date in format found in google sheet
+    
     # Get hour and minute string to compare with google sheet
     # current_hour =
     # current_minute
@@ -170,12 +174,18 @@ def checkForDeliveries():
         if delivery_day == current_day_string and delivery_time == current_time_string:
             print('Printing a message!')
             print(message)
-            printer.print(message)
             printer.feed(3)
+            printer.boldOn()
+            printer.println('For %s' % (addressee))
+            printer.boldOff()
+            printer.println('%s - %s' % (delivery_day, delivery_time))
+            printer.feed(2)
+            printer.print(message)
+            printer.feed(5)
         else:
             print('Not a match')
 
-def updateLittlePresents():
+def updateLittlePresents(sheetId):
     """Shows basic usage of the Sheets API.
 
     Creates a Sheets API service object and prints the names and majors of
@@ -191,7 +201,8 @@ def updateLittlePresents():
     service = discovery.build('sheets', 'v4', http=http,
                               discoveryServiceUrl=discoveryUrl)
 
-    spreadsheetId = '1ivUi_2nw3gHs-9d1xL-sdOnaaAousjIgE8a4Bw9B2sI'
+    #spreadsheetId = '1ivUi_2nw3gHs-9d1xL-sdOnaaAousjIgE8a4Bw9B2sI'
+    spreadsheetId = sheetId
     rangeName = 'Sheet1!A1:C11'
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=rangeName).execute()
@@ -205,7 +216,7 @@ def updateLittlePresents():
         for row in values:
             # Print columns A and E, which correspond to indices 0 and 4.
             print('Delivery date: %s, Delivery time: %s, Message: %s' % (row[0], row[1], row[2]))
-        lp_list = values
+        return values
 
 
 # Main loop
@@ -261,8 +272,10 @@ while(True):
   # import thing.
   if t > nextDeliveryInterval:
     nextDeliveryInterval = t + 60.0
-    checkForDeliveries()
+    checkForDeliveries(lp_list_for_maggie, "Maggie")
+    checkForDeliveries(lp_list_for_dave,   "Dave")
 
   if t > nextUpdateInterval:
     nextUpdateInterval = t + 300.0
-    updateLittlePresents()
+    lp_list_for_maggie = updateLittlePresents('1ivUi_2nw3gHs-9d1xL-sdOnaaAousjIgE8a4Bw9B2sI')
+    lp_list_for_dave   = updateLittlePresents('1HD0N7c02u4xXcoQAbaY5po3iDeKYiManfVSzsuUU7Ss')
