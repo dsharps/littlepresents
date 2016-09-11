@@ -26,16 +26,16 @@ SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 CLIENT_SECRET_FILE = '../credentials/client_secret.json'
 APPLICATION_NAME = 'Google Sheets API Python Quickstart'
 
-ledPin       = 18
-buttonPin    = 23
-holdTime     = 2     # Duration for button hold (shutdown)
-tapTime      = 0.01  # Debounce time for button taps
-nextDeliveryInterval = 0.0   # Time of next recurring delivery operation
-nextUpdateInterval = 0.0 # Time of next recurring update operation
-dailyFlag    = False # Set after daily trigger occurs
-lastId       = '1'   # State information passed to/from interval script
-printer      = Adafruit_Thermal("/dev/ttyAMA0", 19200, timeout=5)
-lp_list      = []
+ledPin                  = 18
+buttonPin               = 23
+holdTime                = 2     # Duration for button hold (shutdown)
+tapTime                 = 0.01  # Debounce time for button taps
+nextDeliveryInterval    = 0.0   # Time of next recurring delivery operation
+nextUpdateInterval      = 0.0 # Time of next recurring update operation
+dailyFlag               = False # Set after daily trigger occurs
+lastId                  = '1'   # State information passed to/from interval script
+printer                 = Adafruit_Thermal("/dev/ttyAMA0", 19200, timeout=5)
+lp_list                 = []
 
 # Called when button is briefly tapped.  Invokes time/temperature script.
 def tap():
@@ -117,13 +117,6 @@ prevButtonState = GPIO.input(buttonPin)
 prevTime        = time.time()
 tapEnable       = False
 holdEnable      = False
-
-#print("Starting tap")
-#tap()
-#print("Finished tap, starting daily")
-#daily()
-#print("Finished daily")
-
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -273,4 +266,3 @@ while(True):
   if t > nextUpdateInterval:
     nextUpdateInterval = t + 300.0
     updateLittlePresents()
-
