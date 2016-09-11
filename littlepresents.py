@@ -4,6 +4,7 @@ import os
 import time
 import datetime
 import threading
+import logging
 
 from apiclient import discovery
 import oauth2client
@@ -37,6 +38,9 @@ lastId                  = '1'   # State information passed to/from interval scri
 printer                 = Adafruit_Thermal("/dev/ttyAMA0", 19200, timeout=5)
 lp_list_for_maggie      = []
 lp_list_for_dave        = []
+
+logging.basicConfig(level=logging.DEBUG, filename="littlepresents_logfile", filemode="a+",
+                        format="%(asctime)-15s %(levelname)-8s %(message)s")
 
 # Called when button is briefly tapped.  Invokes time/temperature script.
 def tap():
@@ -145,7 +149,7 @@ def get_credentials():
             credentials = tools.run_flow(flow, store, flags)
         else: # Needed only for compatibility with Python 2.6
             credentials = tools.run(flow, store)
-        print('Storing credentials to ' + credential_path)
+        logging.info('Storing credentials to ' + credential_path)
     return credentials
 
 def checkForDeliveries(lp_list, addressee):
@@ -159,10 +163,10 @@ def checkForDeliveries(lp_list, addressee):
     current_hour = `current_hour-12` if current_hour > 12 else `current_hour`
     current_minute = now.strftime("%M")
     current_time_string = "%s:%s %s" % (current_hour, current_minute, am_pm)
-    print('Checking deliveries for %s, it\'s %s, %s' % (addressee, current_day_string, current_time_string))
-    print('LP found: %s' % (len(lp_list)))
+    logging.info('Checking deliveries for %s, it\'s %s, %s' % (addressee, current_day_string, current_time_string))
+    logging.info('LP found: %s' % (len(lp_list)))
     # Get date in format found in google sheet
-    
+
     # Get hour and minute string to compare with google sheet
     # current_hour =
     # current_minute
@@ -173,9 +177,9 @@ def checkForDeliveries(lp_list, addressee):
 
         if delivery_day == current_day_string and delivery_time == current_time_string:
             GPIO.output(ledPin, GPIO.HIGH)
-            
-            print('Printing a message!')
-            print(message)
+
+            logging.info('Printing a message!')
+            logging.info(message)
             printer.feed(2)
             printer.boldOn()
             printer.println('For %s' % (addressee))
@@ -190,7 +194,7 @@ def checkForDeliveries(lp_list, addressee):
             printer.feed(2)
             GPIO.output(ledPin, GPIO.LOW)
         else:
-            print('Not a match')
+            logging.info('Not a match')
 
 def updateLittlePresents(sheetId, addressee):
     """Shows basic usage of the Sheets API.
@@ -200,7 +204,7 @@ def updateLittlePresents(sheetId, addressee):
     https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
     """
 
-    print('Updating little presents for %s' % (addressee))
+    logging.info('Updating little presents for %s' % (addressee))
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
@@ -216,19 +220,19 @@ def updateLittlePresents(sheetId, addressee):
     values = result.get('values', [])
 
     if not values:
-        print('No data found.')
+        logging.info('No data found.')
     else:
-        # print(values)
-        print('Little Presents: (%s)' % (len(values)))
+        # logging.info(values)
+        logging.info('Little Presents: (%s)' % (len(values)))
         for row in values:
             # Print columns A and E, which correspond to indices 0 and 4.
-            print('Delivery date: %s, Delivery time: %s, Message: %s' % (row[0], row[1], row[2]))
+            logging.info('Delivery date: %s, Delivery time: %s, Message: %s' % (row[0], row[1], row[2]))
         return values
 
 
 # Main loop
 while(True):
-  #print("Looping")
+  #logging.info("Looping")
   # Poll current button state and time
   buttonState = GPIO.input(buttonPin)
   t           = time.time()
