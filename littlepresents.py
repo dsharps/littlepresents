@@ -159,7 +159,7 @@ def checkForDeliveries(lp_list, addressee):
     current_hour = `current_hour-12` if current_hour > 12 else `current_hour`
     current_minute = now.strftime("%M")
     current_time_string = "%s:%s %s" % (current_hour, current_minute, am_pm)
-    print('Checking deliveries, it\'s %s, %s' % (current_day_string, current_time_string))
+    print('Checking deliveries for %s, it\'s %s, %s' % (addressee, current_day_string, current_time_string))
     print('LP found: %s' % (len(lp_list)))
     # Get date in format found in google sheet
     
@@ -172,20 +172,27 @@ def checkForDeliveries(lp_list, addressee):
         message = present[2]
 
         if delivery_day == current_day_string and delivery_time == current_time_string:
+            GPIO.output(ledPin, GPIO.HIGH)
+            
             print('Printing a message!')
             print(message)
-            printer.feed(3)
+            printer.feed(2)
             printer.boldOn()
             printer.println('For %s' % (addressee))
             printer.boldOff()
             printer.println('%s - %s' % (delivery_day, delivery_time))
-            printer.feed(2)
+            printer.feed(1)
             printer.print(message)
-            printer.feed(5)
+            printer.feed(2)
+            printer.justify('C')
+            printer.println('~ ~ ~ ~ ~')
+            printer.justify('L')
+            printer.feed(2)
+            GPIO.output(ledPin, GPIO.LOW)
         else:
             print('Not a match')
 
-def updateLittlePresents(sheetId):
+def updateLittlePresents(sheetId, addressee):
     """Shows basic usage of the Sheets API.
 
     Creates a Sheets API service object and prints the names and majors of
@@ -193,7 +200,7 @@ def updateLittlePresents(sheetId):
     https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
     """
 
-    print('Updating little presents')
+    print('Updating little presents for %s' % (addressee))
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
@@ -277,5 +284,5 @@ while(True):
 
   if t > nextUpdateInterval:
     nextUpdateInterval = t + 300.0
-    lp_list_for_maggie = updateLittlePresents('1ivUi_2nw3gHs-9d1xL-sdOnaaAousjIgE8a4Bw9B2sI')
-    lp_list_for_dave   = updateLittlePresents('1HD0N7c02u4xXcoQAbaY5po3iDeKYiManfVSzsuUU7Ss')
+    lp_list_for_maggie = updateLittlePresents('1ivUi_2nw3gHs-9d1xL-sdOnaaAousjIgE8a4Bw9B2sI', "Maggie")
+    lp_list_for_dave   = updateLittlePresents('1HD0N7c02u4xXcoQAbaY5po3iDeKYiManfVSzsuUU7Ss', "Dave")
